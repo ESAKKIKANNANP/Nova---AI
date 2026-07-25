@@ -1,0 +1,33 @@
+# Virtual environment
+.venv/
+venv/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+
+# macOS
+.DS_Store
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Coverage
+.coverage
+
+# MLflow
+mlruns/
+
+# Cache
+cache/
+
+# Generated files
+artifacts/
+uploads/

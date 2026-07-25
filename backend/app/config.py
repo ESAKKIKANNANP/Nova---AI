@@ -127,7 +127,7 @@ class Settings(BaseSettings):
     )
 
     # ── Server binding ───────────────────────────────────────────────────────
-    host: str = Field(default="0.0.0.0", description="Bind interface for ASGI server.")
+    host: str = Field(default="127.0.0.1", description="Bind interface for ASGI server.")
     port: int = Field(default=8000, ge=1, le=65535, description="TCP port for ASGI server.")
     workers: int = Field(default=1, ge=1, description="Number of gunicorn worker processes.")
 
@@ -159,6 +159,16 @@ class Settings(BaseSettings):
         description="Secret key for signing tokens. MUST be overridden in production.",
     )
     access_token_expire_minutes: int = Field(default=30, ge=1)
+
+    # ── Database ─────────────────────────────────────────────────────────────
+    database_url: str = Field(
+        default="sqlite:///./dev.db",
+        description="Synchronous database URL for migrations and script runs.",
+    )
+    async_database_url: str = Field(
+        default="sqlite+aiosqlite:///./dev.db",
+        description="Asynchronous database URL for FastAPI routes.",
+    )
 
     # ── Computed / derived properties ────────────────────────────────────────
 

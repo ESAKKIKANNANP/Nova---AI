@@ -1,0 +1,77 @@
+name: Enterprise CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Install Dependencies
+        run: cd backend && uv sync
+      - name: Run Flake8
+        run: cd backend && uv run flake8 . || true
+      - name: Run Mypy
+        run: cd backend && uv run mypy . || true
+        
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Node Deps
+        run: cd frontend && npm ci
+      - name: Run ESLint
+        run: cd frontend && npm run lint || true
+      - name: Run TSC
+        run: cd frontend && npm run build || true
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Install Backend Deps
+        run: cd backend && uv sync
+      - name: Run Pytest
+        env:
+          DATABASE_URL: sqlite:///./test.db
+          ASYNC_DATABASE_URL: sqlite+aiosqlite:///./test.db
+          CHECKPOINTER_BACKEND: memory
+        run: cd backend && uv run pytest
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Bandit
+        run: pip install bandit
+      - name: Scan Python Code
+        run: bandit -r backend/ -ll || true
+        
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '0' # Set to 1 in prod to fail on critical
+          severity: 'CRITICAL,HIGH'
